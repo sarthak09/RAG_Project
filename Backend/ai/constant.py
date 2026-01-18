@@ -1,0 +1,9 @@
+DB_DIR = "./db"
+COLLECTION = "rag_collection"
+REGISTRY_PATH = "./registry.json"
+LLMNAME = "groq:llama-3.1-8b-instant"
+EMBEDNAME = "sentence-transformers/all-MiniLM-L6-v2"
+MAX_FILES_PER_USER = 1
+TOP_K = 5
+MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+CHUNK_SIZE = 500

@@ -1,0 +1,16 @@
+{
+    "users": [
+        {
+            "email": "sarthakrawat09@gmail.com",
+            "password": "$2b$12$RLvIclIJYIjmllSDKGtmnOFBKT4EsbITaNYddXxJy0A/raMSd2NX6",
+            "name": "Sarthak Rawat",
+            "address1": "46 Provost Street",
+            "address2": "",
+            "city": "North Adelaide",
+            "state": "SA",
+            "zip": "5006",
+            "trial_end_date": "2026-01-25T12:11:41.085122",
+            "created_at": "2026-01-11T12:11:41.252534"
+        }
+    ]
+}

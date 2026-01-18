@@ -1,0 +1,32 @@
+# Flask Web Framework
+flask==3.1.2
+flask-cors==6.0.1
+werkzeug>=3.1.0
+
+# Authentication
+bcrypt==5.0.0
+PyJWT==2.10.1
+python-dotenv==1.2.1
+
+# LangChain Core (updated versions for EnsembleRetriever support)
+langchain==1.2.4
+langchain-core==1.2.7
+langchain-community==0.4.1
+langchain-classic==1.0.1
+langchain-huggingface==1.0.1
+langchain-chroma==1.1.0
+
+# Vector Store & Embeddings
+chromadb==1.4.1
+sentence-transformers==5.1.2
+
+# Document Processing
+pypdf==6.5.0
+
+# ML & Math
+scikit-learn==1.7.2
+numpy==1.26.4
+rank-bm25==0.2.2
+pydantic==2.12.3
+pydantic-settings==2.11.0
+pydantic_core==2.41.4

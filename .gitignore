@@ -1,0 +1,23 @@
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+dist/
+build/
+
+# Docker
+*.log
+
+# Project specific
+Trails/
+.data/
+db/
+db_*/
+registry.json
