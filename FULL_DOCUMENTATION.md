@@ -361,6 +361,9 @@ git config --global user.name "sarthak09"
 git add .
 git commit -m "commit"
 git push origin main
+
+# if error for git push
+git pull --no-rebase
 ```
 
 - When prompted:

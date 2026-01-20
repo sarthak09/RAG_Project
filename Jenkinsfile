@@ -10,7 +10,8 @@ pipeline {
             steps {
                 echo 'Checking out code from GitHub...'
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/sarthak09/RAG_Project.git']])
-        }        
+            }   
+        }
         // stage('Build Docker Image') {
         //     steps {
         //         script {
