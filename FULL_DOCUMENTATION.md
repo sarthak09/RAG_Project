@@ -35,18 +35,40 @@
 - **Clone your GitHub repo**
 
   ```bash
-  git clone https://github.com/data-guru0/TESTING-9.git
+  git clone https://github.com/sarthak09/RAG_Project.git
   ls
-  cd TESTING-9
+  cd RAG_Project
   ls  # You should see the contents of your project
   ```
 
 - **Install Docker**
 
   - Search: "Install Docker on Ubuntu"
-  - Open the first official Docker website (docs.docker.com)
+  - Open the first official Docker website (docs.docker.com): https://docs.docker.com/engine/install/ubuntu/
   - Scroll down and copy the **first big command block** and paste into your VM terminal
+      ```bash
+      # Add Docker's official GPG key:
+      sudo apt update
+      sudo apt install ca-certificates curl
+      sudo install -m 0755 -d /etc/apt/keyrings
+      sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+      # Add the repository to Apt sources:
+      
+      Types: deb
+      URIs: https://download.docker.com/linux/ubuntu
+      Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+      Components: stable
+      Signed-By: /etc/apt/keyrings/docker.asc
+      EOF
+      sudo apt update
+      ```
+
   - Then copy and paste the **second command block**
+    ```bash
+      sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      ```
   - Then run the **third command** to test Docker:
 
     ```bash
@@ -129,7 +151,7 @@
   ```
 
 
-### 4. Jenkins Setup
+### 4. Jenkins Setup: Hosting Jenkins in the cloud.
 
 - **Run Jenkins in Docker (DIND Mode)**
 
@@ -154,6 +176,9 @@
     --network minikube \
     jenkins/jenkins:lts
     ```
+    8080 is the Jenkins port
+    50000 is for the agents of jenkins
+
 
 - **Verify Jenkins Container**
 
@@ -185,20 +210,20 @@
 
   - Paste the initial password from `docker logs jenkins`
   - Click **Install Suggested Plugins**
-  - Create Admin User
+  - Create Admin User then click on Save and Continue then click on Save and Finish then click on Start using Jenkins
   - Skip agent security warning (ignore for now)
   
-  Pass word: d3da20ac3dde4ae98efd9a538a1cb000
+  Password: d3da20ac3dde4ae98efd9a538a1cb000
 
 - **Install Required Plugins**
 
   - Navigate to: **Manage Jenkins → Plugins**
     - Install:
-      - Docker
-      - Docker Pipeline
-      - Kubernetes
+      - Docker   --->   Cloud Providers, Cluster, Management docker 
+      - Docker Pipeline   --->   pipeline DevOps Deployment docker 
+      - Kubernetes   --->  Cloud Providers Cluster Management kubernetes Agent Management 
 
-- **Restart Jenkins**
+- **Restart Jenkins in your vm instance**
 
   ```bash
   docker restart jenkins
@@ -275,6 +300,8 @@
 #### 🧱 Create Jenkinsfile in VM
 
 - Open **Pipeline Syntax Generator** in a new tab (for reference)
+    Sample Step: checkout: check out from version control
+    SCM: Git 
 - On your VM terminal:
 
   ```bash
@@ -290,7 +317,7 @@
           stage('Checkout Github') {
               steps {
                   echo 'Checking out code from GitHub...'
-                  checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/data-guru0/GitOPS-testing.git']])
+                  checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/sarthak09/RAG_Project.git']])
               }
           }        
           stage('Build Docker Image') {
