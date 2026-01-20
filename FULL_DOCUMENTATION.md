@@ -361,14 +361,15 @@ git config --global user.name "sarthak09"
 git add .
 git commit -m "commit"
 git push origin main
-
-# if error for git push
-git pull --no-rebase
 ```
-
 - When prompted:
   - **Username**: `sarthak09`
   - **Password**: GitHub token (paste, it's invisible)
+
+```bash
+# if error for git push
+git pull --no-rebase
+```
 
 ---
 
@@ -379,6 +380,7 @@ git pull --no-rebase
 - Click **Build Now**
 
 If successful ✅, GitHub is now **fully integrated** with Jenkins!
+You can see console output and workspace to verify
 
 ---
 
@@ -392,8 +394,9 @@ If successful ✅, GitHub is now **fully integrated** with Jenkins!
 2. Scroll down to **Docker Installations**
 3. Click **Add Docker**
    - **Name**: `Docker`
+      NO need to put anything on Installation root
    - ✅ Check **Install automatically**
-   - Select **Install from docker.com**
+   - Select Add installer and select: **Install from docker.com**
 4. Click **Apply and Save**
 
 ---
@@ -426,7 +429,9 @@ git pull origin main
 #### ➕ Add DockerHub Credentials to Jenkins
 
 1. Go to **Jenkins → Manage Jenkins → Credentials → Global → Add Credentials**
-   - **Username**: DockerHub username (e.g., `dataguru97`)
+  Kind: Username with password
+  Scop: Global (Jenkins, nodes, items, all child items, etc)
+   - **Username**: sarthakrawat
    - **Password**: The DockerHub token
    - **ID**: `gitops-dockerhub`
    - **Description**: `DockerHub Access Token`
