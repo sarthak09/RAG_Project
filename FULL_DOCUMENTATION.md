@@ -276,8 +276,10 @@
 #### 🔑 Add GitHub Credentials to Jenkins
 
 - Go to: **Manage Jenkins → Credentials → Global → Add Credentials**
-  - **Username**: Your GitHub username
-  - **Password**: The token you just generated
+  Kind: Username with password
+  Scop: Global (Jenkins, nodes, items, all child items, etc)
+  - **Username**: sarthak09
+  - **Password**: The generated token
   - **ID**: `github-token`
   - **Description**: `github-token`
 
@@ -351,18 +353,18 @@
 ---
 
 #### 🔃 Push Jenkinsfile to GitHub
-
+Add below to the VM instance
 ```bash
-git config --global user.email "gyrogodnon@gmail.com"
-git config --global user.name "data-guru0"
-
+cd RAG_Project/
+git config --global user.email "sarthakrawat09@gmail.com"
+git config --global user.name "sarthak09"
 git add .
 git commit -m "commit"
 git push origin main
 ```
 
 - When prompted:
-  - **Username**: `data-guru0`
+  - **Username**: `sarthak09`
   - **Password**: GitHub token (paste, it's invisible)
 
 ---
@@ -712,7 +714,7 @@ argocd login 34.72.5.170:31704 --username admin --password $(kubectl get secret 
    * **Type:** git
    * **Name:** anything you want
    * **Project:** default
-   * **Repo URL:** `https://github.com/data-guru0/GitOPS-testing.git`
+   * **Repo URL:** `https://github.com/sarthak09/RAG_Project.git`
    * **Username & Password:** Provide GitHub username and token (optional but recommended)
 3. Click **Connect**.
 4. You should see a success message confirming the GitHub repo is connected to ArgoCD.
