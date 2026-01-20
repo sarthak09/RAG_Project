@@ -1,13 +1,18 @@
+################## 1. DOCKER BUILD 
+
 #Build Docker Image or rebuilt
 docker build -t rag_project .
 
-# to verify image created
+# to verify image created and get image ID
 docker images
 
 # to remove images
 docker rmi <ID image>
 
 
+
+
+################## 2. DOCKER RUN
 #run
 docker run -d --name rag_project -p 5000:5000 --env-file .env rag_project
 """
@@ -17,27 +22,29 @@ docker run -d --name rag_project -p 5000:5000 --env-file .env rag_project
 --name = names container "anime-app"
 """
 
-# docker container
+# check docker running containers
 docker ps
 
-# check logs
-docker logs recommender_app
+# check docker all containers
+docker ps -a
 
-#stop docker container and remove the container
-docker stop anime-app && docker rm anime-app
+# check logs
+docker logs rag_project
 
 #inspect docker
-docker inspect recommender_app --format '{{json .Mounts}}'
+docker inspect rag_project --format '{{json .Mounts}}'
+
+#stop docker container and remove the container
+docker stop rag_project && docker rm rag_project
 
 #stop all running containers
 docker stop $(docker ps -q)
 
-#remove all containers
+#remove all containers 
 docker rm -f $(docker ps -aq)
 
-
 #restart docker container
-docker restart recommender_app
+docker restart rag_project
 
 
 ###################

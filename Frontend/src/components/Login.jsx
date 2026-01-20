@@ -90,6 +90,11 @@ const Login = () => {
                                 </button>
                             </form>
                             <div className="text-center mt-3">
+                                <Link to="/reset-password" className="text-decoration-none small">
+                                    Forgot Password?
+                                </Link>
+                            </div>
+                            <div className="text-center mt-2">
                                 <small className="text-muted">
                                     Don't have an account? <Link to="/signup">Sign up</Link>
                                 </small>

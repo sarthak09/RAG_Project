@@ -10,6 +10,8 @@ const BasicRag = () => {
     const [uploadedFile, setUploadedFile] = useState(null)
     const [chunkingMethod, setChunkingMethod] = useState('standard')
     const [useHybridSearch, setUseHybridSearch] = useState(false)
+    const [useReranker, setUseReranker] = useState(false)
+    const [queryEnhancementMode, setQueryEnhancementMode] = useState('normal')
     const [processingStatus, setProcessingStatus] = useState('not_started') // not_started, processing, ready
     const [question, setQuestion] = useState('')
     const [conversation, setConversation] = useState([])
@@ -55,6 +57,12 @@ const BasicRag = () => {
                 if (statusData.hybrid_search !== undefined) {
                     setUseHybridSearch(statusData.hybrid_search)
                 }
+                if (statusData.use_reranker !== undefined) {
+                    setUseReranker(statusData.use_reranker)
+                }
+                if (statusData.query_enhancement_mode) {
+                    setQueryEnhancementMode(statusData.query_enhancement_mode)
+                }
             }
         } catch (error) {
             console.error('Error checking file and status:', error)
@@ -76,7 +84,9 @@ const BasicRag = () => {
                 },
                 body: JSON.stringify({
                     chunking_method: chunkingMethod,
-                    hybrid_search: useHybridSearch
+                    hybrid_search: useHybridSearch,
+                    use_reranker: useReranker,
+                    query_enhancement_mode: queryEnhancementMode
                 })
             })
             
@@ -147,13 +157,24 @@ const BasicRag = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    question: currentQuestion
+                    question: currentQuestion,
+                    query_enhancement_mode: queryEnhancementMode
                 })
             })
             
             const data = await response.json()
             
             if (data.success) {
+                // Add enhanced query if different from original
+                if (data.enhanced_query && data.enhanced_query !== currentQuestion) {
+                    setConversation(prev => [...prev, {
+                        type: 'enhanced_query',
+                        content: data.enhanced_query,
+                        mode: data.query_enhancement_mode,
+                        timestamp: new Date().toLocaleTimeString()
+                    }])
+                }
+                
                 setConversation(prev => [...prev, {
                     type: 'answer',
                     content: data.answer,
@@ -271,8 +292,8 @@ const BasicRag = () => {
                                         </div>
                                         
                                         <div className="mb-3">
-                                            <label className="form-label">Choose Retrieval Method:</label>
-                                            <div className="form-check form-switch">
+                                            <label className="form-label">Advanced Options:</label>
+                                            <div className="form-check form-switch mb-2">
                                                 <input 
                                                     className="form-check-input" 
                                                     type="checkbox" 
@@ -288,6 +309,80 @@ const BasicRag = () => {
                                                             "Uses both semantic embeddings (70%) and BM25 keyword matching (30%) for better retrieval quality." :
                                                             "Uses only semantic embeddings for retrieval. Enable for hybrid dense + sparse search."
                                                         }
+                                                    </small>
+                                                </label>
+                                            </div>
+                                            <div className="form-check form-switch">
+                                                <input 
+                                                    className="form-check-input" 
+                                                    type="checkbox" 
+                                                    role="switch"
+                                                    id="useReranker"
+                                                    checked={useReranker}
+                                                    onChange={(e) => setUseReranker(e.target.checked)}
+                                                />
+                                                <label className="form-check-label" htmlFor="useReranker">
+                                                    <strong>Enable Reranking (Cross-Encoder)</strong>
+                                                    <small className="d-block text-muted">
+                                                        {useReranker ? 
+                                                            "Reranks retrieved documents using cross-encoder model for improved relevance scoring." :
+                                                            "Uses standard retrieval ranking. Enable for enhanced document relevance through reranking."
+                                                        }
+                                                    </small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mb-3">
+                                            <label className="form-label">Query Enhancement:</label>
+                                            <div className="form-check">
+                                                <input 
+                                                    className="form-check-input" 
+                                                    type="radio" 
+                                                    name="queryEnhancement" 
+                                                    id="queryNormal"
+                                                    value="normal"
+                                                    checked={queryEnhancementMode === 'normal'}
+                                                    onChange={(e) => setQueryEnhancementMode(e.target.value)}
+                                                />
+                                                <label className="form-check-label" htmlFor="queryNormal">
+                                                    <strong>Normal Mode</strong>
+                                                    <small className="d-block text-muted">
+                                                        Use original query as-is without modification
+                                                    </small>
+                                                </label>
+                                            </div>
+                                            <div className="form-check">
+                                                <input 
+                                                    className="form-check-input" 
+                                                    type="radio" 
+                                                    name="queryEnhancement" 
+                                                    id="queryExpansion"
+                                                    value="expansion"
+                                                    checked={queryEnhancementMode === 'expansion'}
+                                                    onChange={(e) => setQueryEnhancementMode(e.target.value)}
+                                                />
+                                                <label className="form-check-label" htmlFor="queryExpansion">
+                                                    <strong>Query Expansion</strong>
+                                                    <small className="d-block text-muted">
+                                                        Expands query with synonyms, technical terms, and context for better retrieval
+                                                    </small>
+                                                </label>
+                                            </div>
+                                            <div className="form-check">
+                                                <input 
+                                                    className="form-check-input" 
+                                                    type="radio" 
+                                                    name="queryEnhancement" 
+                                                    id="queryDecomposition"
+                                                    value="decomposition"
+                                                    checked={queryEnhancementMode === 'decomposition'}
+                                                    onChange={(e) => setQueryEnhancementMode(e.target.value)}
+                                                />
+                                                <label className="form-check-label" htmlFor="queryDecomposition">
+                                                    <strong>Query Decomposition</strong>
+                                                    <small className="d-block text-muted">
+                                                        Breaks down complex questions into sub-questions for comprehensive retrieval
                                                     </small>
                                                 </label>
                                             </div>
@@ -307,7 +402,9 @@ const BasicRag = () => {
                                         <div className="spinner-border text-primary me-3" role="status"></div>
                                         <p className="mb-0">
                                             Processing your document with <strong>{chunkingMethod}</strong> chunking
-                                            {useHybridSearch && <span> and <strong>hybrid search</strong> (Dense + BM25)</span>}...
+                                            {useHybridSearch && <span>, <strong>hybrid search</strong> (Dense + BM25)</span>}
+                                            {useReranker && <span>, <strong>reranking</strong></span>}
+                                            {queryEnhancementMode !== 'normal' && <span>, <strong>{queryEnhancementMode === 'expansion' ? 'query expansion' : 'query decomposition'}</strong></span>}...
                                         </p>
                                         <small className="text-muted">This may take a few moments</small>
                                     </div>
@@ -317,7 +414,9 @@ const BasicRag = () => {
                                     <div className="alert alert-success">
                                         <i className="bi bi-check-circle-fill me-2"></i>
                                         Document processed successfully with <strong>{chunkingMethod}</strong> chunking
-                                        {useHybridSearch && <span> and <strong>hybrid search</strong> enabled</span>}! 
+                                        {useHybridSearch && <span>, <strong>hybrid search</strong> enabled</span>}
+                                        {useReranker && <span>, <strong>reranking</strong> enabled</span>}
+                                        {queryEnhancementMode !== 'normal' && <span>, <strong>{queryEnhancementMode === 'expansion' ? 'query expansion' : 'query decomposition'}</strong> enabled</span>}! 
                                         You can now start asking questions.
                                     </div>
                                 )}
@@ -346,14 +445,34 @@ const BasicRag = () => {
                                     {conversation.length > 0 && (
                                         <div className="mb-4" style={{maxHeight: '400px', overflowY: 'auto'}}>
                                             {conversation.map((item, index) => (
-                                                <div key={index} className={`mb-3 p-3 rounded ${item.type === 'question' ? 'bg-light' : item.type === 'error' ? 'bg-danger bg-opacity-10' : 'bg-success bg-opacity-10'}`}>
+                                                <div key={index} className={`mb-3 p-3 rounded ${
+                                                    item.type === 'question' ? 'bg-light' : 
+                                                    item.type === 'enhanced_query' ? 'bg-info bg-opacity-10 border border-info' :
+                                                    item.type === 'error' ? 'bg-danger bg-opacity-10' : 
+                                                    'bg-success bg-opacity-10'
+                                                }`}>
                                                     <div className="d-flex justify-content-between align-items-start mb-2">
                                                         <strong>
-                                                            {item.type === 'question' ? 'You' : item.type === 'error' ? 'Error' : 'AI Assistant'}
+                                                            {item.type === 'question' ? 'You' : 
+                                                             item.type === 'enhanced_query' ? (
+                                                                <span>
+                                                                    <i className="bi bi-magic me-1"></i>
+                                                                    Enhanced Query 
+                                                                    <span className="badge bg-info ms-2">
+                                                                        {item.mode === 'expansion' ? 'Expanded' : 'Decomposed'}
+                                                                    </span>
+                                                                </span>
+                                                             ) :
+                                                             item.type === 'error' ? 'Error' : 'AI Assistant'}
                                                         </strong>
                                                         <small className="text-muted">{item.timestamp}</small>
                                                     </div>
-                                                    <div>{item.content}</div>
+                                                    <div style={{
+                                                        whiteSpace: 'pre-wrap',
+                                                        fontStyle: item.type === 'enhanced_query' ? 'italic' : 'normal'
+                                                    }}>
+                                                        {item.content}
+                                                    </div>
                                                     {item.context && (
                                                         <div className="mt-2">
                                                             <small className="text-muted">

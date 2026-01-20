@@ -15,6 +15,10 @@ langchain-community==0.4.1
 langchain-classic==1.0.1
 langchain-huggingface==1.0.1
 langchain-chroma==1.1.0
+langchain-groq==1.0.0
+langchain-experimental==0.4.1
+langgraph-sdk==0.2.9
+langsmith==0.4.40
 
 # Vector Store & Embeddings
 chromadb==1.4.1
@@ -30,3 +34,5 @@ rank-bm25==0.2.2
 pydantic==2.12.3
 pydantic-settings==2.11.0
 pydantic_core==2.41.4
+
+flashrank==0.2.10

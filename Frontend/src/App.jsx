@@ -6,6 +6,7 @@ import About from './components/About'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import BasicRag from './components/BasicRag'
+import ResetPassword from './components/ResetPassword'
 import loginContext from './context/context'
 import './App.css'
 
@@ -80,6 +81,7 @@ function App() {
           <Route path="/basic-rag" element={logininfo.islog ? <BasicRag /> : <Navigate to="/login" />} />
           <Route path="/login" element={!logininfo.islog ? <Login /> : <Navigate to="/" />} />
           <Route path="/signup" element={!logininfo.islog ? <Signup /> : <Navigate to="/" />} />
+          <Route path="/reset-password" element={!logininfo.islog ? <ResetPassword /> : <Navigate to="/" />} />
         </Routes>
       </Router>
     </loginContext.Provider>

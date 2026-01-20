@@ -3,6 +3,7 @@ import re
 import glob
 import json
 import hashlib
+import time
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timezone
@@ -234,6 +235,22 @@ class VectorDB:
         except Exception as e:
             print(f"Warning: Could not persist database: {e}")
 
+    def close(self):
+        """Properly close the database connection"""
+        try:
+            # For newer ChromaDB versions, just clear references
+            if hasattr(self.db, '_client') and self.db._client:
+                try:
+                    if hasattr(self.db._client, 'reset'):
+                        self.db._client.reset()
+                except:
+                    pass
+            # Clear main reference
+            self.db = None
+            print("Database connection closed")
+        except Exception as e:
+            print(f"Error closing database: {e}")
+
     def persist(self):
         self._safe_persist()
         save_registry(self.reg, self.registry_path)
@@ -256,13 +273,34 @@ class VectorDB:
             return
             
         print(f"Adding {len(docs)} documents to vector store in batches of {self.batch_size}")
+        
+        max_retries = 3
         for i in range(0, len(docs), self.batch_size):
             batch = docs[i:i + self.batch_size]
-            self.db.add_documents(batch)
-            print(f"Added batch {i//self.batch_size + 1}/{(len(docs)-1)//self.batch_size + 1}")
+            batch_num = i//self.batch_size + 1
+            total_batches = (len(docs)-1)//self.batch_size + 1
+            
+            # Retry mechanism for each batch
+            for retry in range(max_retries):
+                try:
+                    self.db.add_documents(batch)
+                    print(f"✓ Added batch {batch_num}/{total_batches} ({len(batch)} docs)")
+                    break  # Success, move to next batch
+                    
+                except Exception as e:
+                    error_msg = str(e)
+                    if retry < max_retries - 1:
+                        wait_time = 2 * (retry + 1)  # 2, 4 seconds
+                        print(f"✗ Batch {batch_num} failed (attempt {retry+1}/{max_retries}): {error_msg}")
+                        print(f"  Retrying in {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"✗ Batch {batch_num} failed after {max_retries} attempts")
+                        raise Exception(f"Failed to add batch {batch_num} after {max_retries} retries: {error_msg}")
         
+        print("All batches added successfully, persisting...")
         self._safe_persist()
-        print("Vector store persisted successfully")
+        print("✓ Vector store persisted successfully")
 
     def ingest_file_incremental(self, path: str):
         abs_path = os.path.abspath(path)
@@ -353,7 +391,7 @@ class VectorDB:
         return sorted(self.reg["docs"].values(), key=lambda x: x.get("added_at", ""))
 
     def as_retriever(self, k: int = 4, meta_filter: Optional[Dict[str, Any]] = None):
-        return self.db.as_retriever(search_kwargs={"k": k, "filter": meta_filter} if meta_filter else {"k": k})
+        return self.db.as_retriever(search_type="mmr",search_kwargs={"k": k, "filter": meta_filter} if meta_filter else {"k": k})
 
     def as_hybrid_retriever(self, k: int = 4, sparse_k: int = 3, dense_weight: float = 0.7, sparse_weight: float = 0.3, meta_filter: Optional[Dict[str, Any]] = None):
         """
