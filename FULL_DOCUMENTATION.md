@@ -742,7 +742,7 @@ users:
 
 ---
 
-#### 📝 Step 3: Save Edited Kubeconfig File
+#### 📝 Step 3: Save Edited Kubeconfig File as kubeconfig
 
 - Save this new file as `kubeconfig` (no `.txt` extension) in your **Downloads** folder.
 
@@ -750,7 +750,7 @@ Now open Git Bash and run:
 
 ```bash
 cd ~/Downloads
-vi config
+vi kubeconfig
 ```
 
 Paste the full edited config content.
@@ -766,7 +766,8 @@ Save it:
 - Go to **Jenkins Dashboard → Manage Jenkins → Credentials**
 - Select: **Global → Add Credentials**
 - Choose: **Kind: Secret file**
-- Upload your edited `config` file
+- Scope: Golbal (Jenkins, nodes, items, all child items, etc)
+- Upload your edited `kubeconfig` file
 - Set:
   - **ID**: `kubeconfig`
   - **Description**: `kubeconfig`
@@ -775,9 +776,9 @@ Click Save ✅
 
 ---
 
-#### ☁️ Step 5: Set Up Kubernetes Cluster Access in Jenkins Pipeline
+#### ☁️ Step 5: Set Up Kubernetes Cluster Access in Jenkins Pipeline (Skip this step as already done in the Jenkins file)
 
-1. Go to Jenkins Dashboard → Pipelines → Open your `GitOps` pipeline
+1. Go to Jenkins Dashboard → Pipelines → Configure → Open your `GitOps` pipeline
 2. Click **Configure**
 3. Scroll down to **Pipeline section**
 4. Click **Pipeline Syntax** → Opens in a new tab
@@ -798,6 +799,20 @@ Copy the generated script and paste/save it — you’ll use it in your Jenkinsf
 ✅ At this point, your Jenkins instance is fully connected to your Kubernetes cluster using a secure kubeconfig setup.
 
 ---
+Please copy the ip found using 'kubectl cluster-info' to jenkins file: https://192.168.49.2:8443
+Also credentialsId in the below code is same as that of credentialId defined in ID of the credentail in jenkins for kubernetis
+        // stage('Apply Kubernetes & Sync App with ArgoCD') {
+        //     steps {
+        //         script {
+        //             kubeconfig(credentialsId: 'kubeconfig', serverUrl: 'https://192.168.49.2:8443') {
+        //                 sh '''
+        //                 argocd login 34.58.54.96:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
+        //                 argocd app sync study
+        //                 '''
+        //             }
+        //         }
+        //     }
+        // }
 
 # 9. Install and Configure ArgoCd - Part 3
 
@@ -818,12 +833,25 @@ Copy the generated script and paste/save it — you’ll use it in your Jenkinsf
   
 ```groovy
 sh '''
-argocd login 34.72.5.170:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
+argocd login 34.122.177.176:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
 '''
 ````
 
-> **Note:** Change `34.72.5.170:31704` to your ArgoCD server IP and port.
+> **Note:** Change `34.122.177.176:31704` to your ArgoCD server IP and port in the Jenkinsfiles as well.
 
+
+        stage('Apply Kubernetes & Sync App with ArgoCD') {
+            steps {
+                script {
+                    kubeconfig(credentialsId: 'kubeconfig', serverUrl: 'https://192.168.49.2:8443') {
+                        sh '''
+                        argocd login 34.122.177.176:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
+                        argocd app sync study
+                        '''
+                    }
+                }
+            }
+        }
 ---
 
 ### Step 3: Connect GitHub Repository to ArgoCD
@@ -846,6 +874,7 @@ argocd login 34.72.5.170:31704 --username admin --password $(kubectl get secret 
 ```groovy
 kubectl create secret generic groq-api-secret \
   --from-literal=GROQ_API_KEY="" \
+  --from-literal=HUGGINGFACEHUB_API_TOKEN="" \
   -n argocd
 ```
 
@@ -854,15 +883,15 @@ kubectl create secret generic groq-api-secret \
 * Go to **Applications** → Click **New App**.
 * Fill in the form:
 
-  * **Name:** Gitops (or any name you prefer)
+  * **Name:** rag_proj (or any name you prefer)
   * **Project:** default
   * **Sync Policy:** Automatic
-  * Tick **Sync Pipeline Resources** and **Self Heal**.
+  * Tick **Enable Auto-Sync, Sync Pipeline Resources** and **Self Heal**.
   * Leave other settings as default.
   * **Repository URL:** select your connected repo.
   * **Revision:** `main` (branch)
-  * **Path:** `manifests`
-  * **Cluster URL:** select from dropdown.
+  * **Path:** `manifests`   --> in your project folder which has deployment and service.yaml files
+  * **Cluster URL:** select from dropdown. --> https://kubernetes.default.svc
   * **Namespace:** `argocd`
 * Click **Create**.
 * You should see the application status as **Synced** and **Healthy**.
