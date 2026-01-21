@@ -448,7 +448,7 @@ git pull origin main
 #### 🐳 Create DockerHub Repository
 
 1. Go to [https://hub.docker.com](https://hub.docker.com)
-2. Create a new repository, e.g., `sarthakrawat/rag_project`
+2. Create a new repository, e.g., `sarthakrawat/rag_project2`
 
 ---
 
@@ -465,10 +465,10 @@ git pull origin main
 1. Go to **Jenkins → Manage Jenkins → Credentials → Global → Add Credentials**
   Kind: Username with password
   Scop: Global (Jenkins, nodes, items, all child items, etc)
-   - **Username**: sarthakrawat
+   - **Username**: sarthakrawat             #Put username of the dockerhub not the name for the accesstoken so it will always be sarthakrawat
    - **Password**: The DockerHub token
-   - **ID**: `gitops-dockerhub`
-   - **Description**: `gitops-dockerhub`
+   - **ID**: `dockerhub-token`
+   - **Description**: `dockerhub-token`
 
 ---
 
@@ -477,6 +477,8 @@ git pull origin main
 Add an `environment` block at the top of the pipeline:
 
 Update the `Build Docker Image` and `Push Image to DockerHub` stages like given in Jenkinsfile in repo
+        DOCKER_HUB_REPO = "sarthakrawat/rag_project2"     ---> repo name
+        DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"     ---> Jenkins credential ID for docker its the ID name
 
 ---
 

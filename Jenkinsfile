@@ -2,8 +2,8 @@ pipeline {
     agent any
     environment {
         DOCKER_HUB_REPO = "sarthakrawat/rag_project2"
-        DOCKER_HUB_CREDENTIALS_ID = "dockerhub_access"
-        IMAGE_TAG = "v1"
+        DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"
+        IMAGE_TAG = "v${BUILD_NUMBER}"
     }
     stages {
         stage('Checkout Github') {
@@ -30,15 +30,15 @@ pipeline {
                 }
             }
         }
-        stage('Update Deployment YAML with New Tag') {
-            steps {
-                script {
-                    sh """
-                    sed -i 's|image: sarthakrawat/rag_project2:.*|image: sarthakrawat/rag_project2:${IMAGE_TAG}|' manifest/deployment.yaml
-                    """
-                }
-            }
-        }
+        // stage('Update Deployment YAML with New Tag') {
+        //     steps {
+        //         script {
+        //             sh """
+        //             sed -i 's|image: sarthakrawat/studyai:.*|image: sarthakrawat/studyaiy:${IMAGE_TAG}|' manifest/deployment.yaml
+        //             """
+        //         }
+        //     }
+        // }
 
         // stage('Commit Updated YAML') {
         //     steps {
@@ -49,7 +49,7 @@ pipeline {
         //                 git config user.email "sarthakrawat09@gmail.com"
         //                 git add manifest/deployment.yaml
         //                 git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes to commit"
-        //                 git push https://${GIT_USER}:${GIT_PASS}@github.com/sarthak09/RAG_Project.git HEAD:main
+        //                 git push https://${GIT_USER}:${GIT_PASS}@github.com/sarthak09/Questiongenerator.git HEAD:main
         //                 '''
         //             }
         //         }
