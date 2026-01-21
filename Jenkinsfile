@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    sed -i 's|image: sarthakrawat/studyai:.*|image: sarthakrawat/rag_project2:${IMAGE_TAG}|' manifest/deployment.yaml
+                    sed -i 's|image: sarthakrawat/rag_project2:.*|image: sarthakrawat/rag_project2:${IMAGE_TAG}|' manifest/deployment.yaml
                     """
                 }
             }
@@ -73,7 +73,7 @@ pipeline {
                     kubeconfig(credentialsId: 'kubeconfig', serverUrl: 'https://192.168.49.2:8443') {
                         sh '''
                         argocd login 34.122.177.176:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
-                        argocd app sync study
+                        argocd app sync rag
                         '''
                     }
                 }

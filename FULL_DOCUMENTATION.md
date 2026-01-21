@@ -884,7 +884,7 @@ kubectl create secret generic groq-api-secret \
 * Go to **Applications** → Click **New App**.
 * Fill in the form:
 
-  * **Name:** rag_proj (or any name you prefer)
+  * **Name:** rag (or any name you prefer but small letter and only one word and no alphanumeric character and number. Use only single word)
   * **Project:** default
   * **Sync Policy:** Automatic
   * Tick **Enable Auto-Sync, Sync Pipeline Resources** and **Self Heal**.
@@ -905,10 +905,23 @@ kubectl create secret generic groq-api-secret \
 * In the last stage, add the command to sync the ArgoCD app:
 
 ```groovy
-sh 'argocd app sync gitopsapp'
+sh 'argocd app sync rag'
 ```
 
-> Replace `gitopsapp` with the actual name of your ArgoCD application.
+> Replace `rag` with the actual name of your ArgoCD application.
+
+        stage('Apply Kubernetes & Sync App with ArgoCD') {
+            steps {
+                script {
+                    kubeconfig(credentialsId: 'kubeconfig', serverUrl: 'https://192.168.49.2:8443') {
+                        sh '''
+                        argocd login 34.122.177.176:31704 --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
+                        argocd app sync rag
+                        '''
+                    }
+                }
+            }
+        }
 
 * Push the changes to GitHub.
 * Go to Jenkins and build the pipeline.
