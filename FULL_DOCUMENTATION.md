@@ -879,6 +879,7 @@ kubectl create secret generic groq-api-secret \
 ```
 
 ### Step 4: Create a New Application in ArgoCD
+* push the latest code to the github once (v imp). Please update the jenkins.yaml file with the docker repo and github repo name in the Commit Updated YAML and Update Deployment YAML with New Tag
 
 * Go to **Applications** → Click **New App**.
 * Fill in the form:
