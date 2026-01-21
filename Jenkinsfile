@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_REPO = "sarthakrawat/rag_project"
+        DOCKER_HUB_REPO = "sarthakrawat/rag_project2"
         DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }

@@ -74,9 +74,6 @@ git commit -m "Write a clear commit message here"
 
 git push -u origin my-new-branch
 
-
-
-
 git first push
 
 
@@ -233,3 +230,130 @@ minikube start
 
    sudo snap install kubectl --classic
 kubectl version --client
+
+
+
+
+###################################
+AFter shutdown vm
+1. Login to VM again
+2. cd to the main repo
+3. minikube start
+4. minikube status
+5. kubectl version --client   #to cross check
+6. kubectl get nodes       
+7. kubectl cluster-info    
+8. docker ps 
+9. docker network ls
+10. docker ps  
+11. docker logs jenkins   
+if log shows stopped 2026-01-21 07:55:09.208+0000 [id=35]    INFO    jenkins.model.Jenkins#_cleanUpAwaitDisconnects: Waiting for node disconnection completion
+2026-01-21 07:55:09.209+0000 [id=35]    INFO    hudson.lifecycle.Lifecycle#onStatusUpdate: Jenkins stopped
+simple restart jenkins dont do step 12 do step 13
+12. docker run -d --name jenkins \
+    -p 8080:8080 \
+    -p 50000:50000 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/usr/bin/docker \
+    -u root \
+    -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+    --network minikube \
+    jenkins/jenkins:lts
+
+
+    # if jenkins is not active    
+
+13. docker restart jenkins  
+14. If jenin is slow
+docker stop jenkins
+docker rm jenkins    
+docker run -d --name jenkins \
+    -p 8080:8080 \
+    -p 50000:50000 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/usr/bin/docker \
+    -u root \
+    -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+    --network minikube \
+    jenkins/jenkins:lts 
+docker logs jenkins -f
+
+
+
+#https://claude.ai/chat/be8d2e38-bd76-4fdd-bdb7-516672ccf583
+Note: Jenkin with persistance volume. This is useful if you remove Jenkins be mistak then when you reinstall you have your Jenkins backup data (jobs, configurations, credentials, plugins, etc.).
+
+# Stop and remove current Jenkins
+docker stop jenkins
+docker rm jenkins
+
+# Create a directory on your VM for Jenkins data
+mkdir -p ~/jenkins_data
+sudo chown -R 1000:1000 ~/jenkins_data
+
+# Run Jenkins with host directory mount
+docker run -d --name jenkins \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v ~/jenkins_data:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(which docker):/usr/bin/docker \
+  -u root \
+  -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+  -e JAVA_OPTS="-Xmx2048m -Xms1024m" \
+  --network minikube \
+  --restart unless-stopped \
+  jenkins/jenkins:lts
+
+# Monitor startup
+docker logs jenkins -f
+
+
+or 
+
+# Stop and remove current Jenkins
+docker stop jenkins
+docker rm jenkins
+
+# Create a named volume for persistence
+docker volume create jenkins_home
+
+# Run Jenkins with persistent storage
+docker run -d --name jenkins \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(which docker):/usr/bin/docker \
+  -u root \
+  -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+  -e JAVA_OPTS="-Xmx2048m -Xms1024m" \
+  --network minikube \
+  --restart unless-stopped \
+  jenkins/jenkins:lts
+
+# Monitor startup
+docker logs jenkins -f
+
+Note: Important Rules
+✅ DO: Stop and remove containers anytime - your data stays in the volume/directory
+❌ DON'T: Delete the volume or directory:
+
+docker volume rm jenkins_home ← This deletes all data!
+rm -rf ~/jenkins_data ← This deletes all data!
+
+#Re run   
+docker stop jenkins
+docker rm jenkins
+docker run -d --name jenkins \
+     -p 8080:8080 \
+     -p 50000:50000 \
+     -v jenkins_home:/var/jenkins_home \
+     -v /var/run/docker.sock:/var/run/docker.sock \
+     -v $(which docker):/usr/bin/docker \
+     -u root \
+     -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+     -e JAVA_OPTS="-Xmx2048m -Xms1024m" \
+     --network minikube \
+     --restart unless-stopped \
+     jenkins/jenkins:lts

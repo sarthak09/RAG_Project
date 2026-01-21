@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: rag-app
-        image: sarthakrawat/rag_project:__IMAGE_TAG__
+        image: sarthakrawat/rag_project2:__IMAGE_TAG__
         ports:
         - containerPort: 5000
         env:

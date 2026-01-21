@@ -179,6 +179,38 @@
     8080 is the Jenkins port
     50000 is for the agents of jenkins
 
+    OR
+https://claude.ai/chat/be8d2e38-bd76-4fdd-bdb7-516672ccf583
+# Create a directory on your VM for Jenkins data
+mkdir -p ~/jenkins_data
+sudo chown -R 1000:1000 ~/jenkins_data
+
+# Run Jenkins with host directory mount
+docker run -d --name jenkins \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v ~/jenkins_data:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(which docker):/usr/bin/docker \
+  -u root \
+  -e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+  -e JAVA_OPTS="-Xmx2048m -Xms1024m" \
+  --network minikube \
+  --restart unless-stopped \
+  jenkins/jenkins:lts
+
+
+Important Rules
+✅ DO: Stop and remove containers anytime - your data stays in the volume/directory
+❌ DON'T: Delete the volume or directory:
+
+docker volume rm jenkins_home ← This deletes all data!
+rm -rf ~/jenkins_data ← This deletes all data!
+
+# Monitor startup
+docker logs jenkins -f
+
+
 
 - **Verify Jenkins Container**
 
@@ -282,7 +314,6 @@
   - **Password**: The generated token
   - **ID**: `github-token`
   - **Description**: `github-token`
-
 ---
 
 #### 🚀 Create a New Pipeline Job in Jenkins
@@ -296,6 +327,9 @@
    - **Repository URL**: Your GitHub repo link
    - **Credentials**: Select the `github-token` credential
    - **Branch**: `main`
+  - **Branch Specifier (blank for 'any')**: `/main`
+  - **Repository browser**: (Auto)
+  - **Script Path**: `Jenkinsfile`
 
 ---
 
@@ -414,7 +448,7 @@ git pull origin main
 #### 🐳 Create DockerHub Repository
 
 1. Go to [https://hub.docker.com](https://hub.docker.com)
-2. Create a new repository, e.g., `dataguru97/testing-9`
+2. Create a new repository, e.g., `sarthakrawat/rag_project`
 
 ---
 
@@ -434,7 +468,7 @@ git pull origin main
    - **Username**: sarthakrawat
    - **Password**: The DockerHub token
    - **ID**: `gitops-dockerhub`
-   - **Description**: `DockerHub Access Token`
+   - **Description**: `gitops-dockerhub`
 
 ---
 
@@ -463,11 +497,11 @@ git push origin main
 3. Click **Build Now**
 
 ✅ If successful, your image will be available on DockerHub:  
-`https://hub.docker.com/r/dataguru97/testing-9`
+`https://hub.docker.com/repository/docker/sarthakrawat/`
 
 ---
 
-
+###############################################################################3
 ### 7. Install and Configure ArgoCD - Part 1
 
 ---
@@ -486,7 +520,7 @@ kubectl get namespace
 kubectl create ns argocd
 ```
 
-✅ Run the first command again to verify the namespace is created.
+✅ Run the "kubectl get namespace" command again to verify the namespace is created.
 
 ---
 
@@ -588,7 +622,7 @@ Login and you’re now inside the ArgoCD UI 🎉
 
 
 
-Go to the root directory:
+Go to the root directory in VM:
 
 ```bash
 cd ~
@@ -605,8 +639,46 @@ cat .kube/config
 ```
 
 Copy the entire content of `.kube/config` into a Notepad for backup and modification.
-
+nano .kube/config
+ ##### add -data in 3rd line replace certificate-authority to certificate-authority-data
+ ### add -data in 2nd last line replace client-certificate to client-certificate-data: /home/sarthakrawat09/.minikube/profiles/minikube/client.crt
+ ### add -data in 2nd last line replace client-key to client-key-data: /home/sarthakrawat09/.minikube/profiles/minikube/client.key
+  OR
+ ''' 
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: /home/sarthakrawat09/.minikube/ca.crt
+    extensions:
+    - extension:
+        last-update: Wed, 21 Jan 2026 09:10:56 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.37.0
+      name: cluster_info
+    server: https://192.168.49.2:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    extensions:
+    - extension:
+        last-update: Wed, 21 Jan 2026 09:10:56 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.37.0
+      name: context_info
+    namespace: default
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate-data: /home/sarthakrawat09/.minikube/profiles/minikube/client.crt
+    client-key-data: /home/sarthakrawat09/.minikube/profiles/minikube/client.key
 ---
+'''
 
 #### 🔐 Step 2: Convert File Paths to Base64 Encoded Strings
 
@@ -627,6 +699,44 @@ cat /home/sarthakrawat09/.minikube/profiles/minikube/client.key | base64 -w 0; e
 ```
 
 Copy each base64 string and replace the corresponding `certificate-authority-data`, `client-certificate-data`, and `client-key-data` fields in your config file.
+Or
+
+ ''' 
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCakNDQWU2Z0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwdGFXNXAKYTNWaVpVTkJNQjRYRFRJMk1ERXhPVEV4TlRRek9Wb1hEVE0yTURFeE9ERXhOVFF6T1Zvd0ZURVRNQkVHQTFVRQpBeE1LYldsdWFXdDFZbVZEUVRDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTWUyClFNa3hsNStyQytra2cvb0hiUHUyTTNIMEtVZkdPSGRlTXhwVEd0Sy9vK3hjeXR1Vzl1VWpwUndSTmRMNEc1dmkKK0daUFJIR25hTllack9PQ1RZeXlxdGV1cS9wa1VKUUxiTzVwaXMva3E5QzdkVGlUYWgzRlBNT3hzakF0UFYycQpMeHNReGJ6Z3dFQ2MrRFprMlpaYU1TcGpSVzdKTE9XdTNEK0hkaU1HdS9tWmx1bTZnRFpqRUYveCtGaERvMHNVCjgySmQyOGNpKzN1cWlwSHdhTWNIY0QzbG1Ld3JtZi9kbWp1emZJcW1DcTJuc0JiRmh0N0dwTkJoT2ZLbVZFdkcKNnMvbjQzcWtGOEdCampXUzE0T25tbWxnUlM3U1l0clRlZUV4SDUzWFE4K0lEOVE3RklvMlB1b1BSbXpaRG5QYgpZR2NhRkZJTWFxb1NrdEFrdEpFQ0F3RUFBYU5oTUY4d0RnWURWUjBQQVFIL0JBUURBZ0trTUIwR0ExVWRKUVFXCk1CUUdDQ3NHQVFVRkJ3TUNCZ2dyQmdFRkJRY0RBVEFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQjBHQTFVZERnUVcKQkJReUxidS82dUxCMjdYMGlRWFN0NCt5TWFtUUlUQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFwOEd3OXRERQpJTzk1L1lna1ZrWU9wU1FrdGhLYnRjanhjM01ZZUhMblgwYk9qZHJrbXRRazdnK1k2SXhCWEVvM1gwTFhPQ3E0Cm5Kb05EckRiM2djME91ZGYwYjRmdDZPWS93ZUlRNXU3OEZid0RDM3Jmd1orbDdGOW9SZDFMa0Y2ZlpzVHAwNWMKdDlUazh0VjRjbHRiYXR4VjBUb3hDYVVRWWh1elVibWdHcllpQmlXMWR5ZTRZVWZxcFlpQ3Z5WmJOdGFyc2taVgpVRTFOeEthenNTQnkycUlMVWlyVmhhTCtoQnVDbWZZcEdDaVZub3U1MElJTy9PajJ3VU84NUlvWGhvM3dUUDB6Ci9XVDhHNlh4ZVEwMmtQT2xvZGVJcFVyYS9Od1hZRGo0TitSQkswR0o4ZXkwbGZCbHYwcmFCYXEvMVdkNEplVHkKeXJ5N1dxaXBwRXdLY2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    extensions:
+    - extension:
+        last-update: Wed, 21 Jan 2026 09:10:56 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.37.0
+      name: cluster_info
+    server: https://192.168.49.2:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    extensions:
+    - extension:
+        last-update: Wed, 21 Jan 2026 09:10:56 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.37.0
+      name: context_info
+    namespace: default
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURJVENDQWdtZ0F3SUJBZ0lCQWpBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwdGFXNXAKYTNWaVpVTkJNQjRYRFRJMk1ERXhPVEV4TlRRek9Wb1hEVEk1TURFeE9URXhOVFF6T1Zvd01URVhNQlVHQTFVRQpDaE1PYzNsemRHVnRPbTFoYzNSbGNuTXhGakFVQmdOVkJBTVREVzFwYm1scmRXSmxMWFZ6WlhJd2dnRWlNQTBHCkNTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFEV0UwMTYwQ0hEQS9Ebm9HNm44bzNKYWhuanEvN3MKWDZ5TmlGcVRmcS9vSGxadmlPWU9jaHErNTVpVWptaDVDTG9HdEZQc2VZMHo1ZDlqRk91SUFUc3QzOHkxQVZIagprZXdhZ1VHOFpZZXdFbklVdFZITjZQeFhRK3UxUW91dmZxSHJXaTNLQThjMWZaeU1KMXcybERYMlVJNWpjNWRyCnFGNUhuTW1vb3lkMHcrS1dDNUJxRlRHT2lkUWZ4aS9nbG5ubjE4R2hqN2IwYmRhcDI0b0xaSDluQVpsb0tZb2wKYloza25zODJ2ZUNZNm51U2xRTC9kSjZRN08xSUdsbGZPTjh2TEFyN044U1FBcUNMbCtqTWFXYTVmQWpPYWw1cApDRmg2ZHdlbDZ4VERlNDlaRURaUXRvTStubkx6cDFZWUU1bE85YklkWnJ6NXl3dG90NU53UVQwbkFnTUJBQUdqCllEQmVNQTRHQTFVZER3RUIvd1FFQXdJRm9EQWRCZ05WSFNVRUZqQVVCZ2dyQmdFRkJRY0RBUVlJS3dZQkJRVUgKQXdJd0RBWURWUjBUQVFIL0JBSXdBREFmQmdOVkhTTUVHREFXZ0JReUxidS82dUxCMjdYMGlRWFN0NCt5TWFtUQpJVEFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBbGU3ZVhxMTdBaDh5ckZvaFB3OWNMSEhod1RFT0M1K2ZUVzNoCnNNK0lvUTdpQXhhd1JoMkRaSUNjcUNKUlJXcmRzMEF5TnorVm11KzM2ZEJnTHJlVTd3cU9LczRHRkdiVTJrdG8KUUJXdWRTR0VKaWdFc0hVcVdORUhMbEJJTFQzOXlvbGNCV0NHYnJwbjl3OTRycUxhYmlSMElDa0M0YUE3VVp2VApVMDVOWVpxRTBCSWx2TDE2K1gxZjdJSXhqeHJWKzVmZWFlWngwMzdna0dNNFlMRVFZTUFEQTFXTlFlclBWaGpoCmNxMzlaTlFaMXFFM1ZyU2c3NDBZMUVldnB5VnZhRWJPekRIc1o5SnYrVjJBYmlNSXRqeUZjZE12SFE5eVBDTSsKakMydDBpck9WZ2UvOVl4TlJvWFh0aU1yNEhOOVE3NUNIMmlndkZWT05LUkdjTTF0SXc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBMWhOTmV0QWh3d1B3NTZCdXAvS055V29aNDZ2KzdGK3NqWWhhazM2djZCNVdiNGptCkRuSWF2dWVZbEk1b2VRaTZCclJUN0htTk0rWGZZeFRyaUFFN0xkL010UUZSNDVIc0dvRkJ2R1dIc0JKeUZMVlIKemVqOFYwUHJ0VUtMcjM2aDYxb3R5Z1BITlgyY2pDZGNOcFExOWxDT1kzT1hhNmhlUjV6SnFLTW5kTVBpbGd1UQphaFV4am9uVUg4WXY0Slo1NTlmQm9ZKzI5RzNXcWR1S0MyUi9ad0daYUNtS0pXMmQ1SjdQTnIzZ21PcDdrcFVDCi8zU2VrT3p0U0JwWlh6amZMeXdLK3pmRWtBS2dpNWZvekdsbXVYd0l6bXBlYVFoWWVuY0hwZXNVdzN1UFdSQTIKVUxhRFBwNXk4NmRXR0JPWlR2V3lIV2E4K2NzTGFMZVRjRUU5SndJREFRQUJBb0lCQUJhdHV5YTRiT2lLMUN4eQorbUM2dy9BNHJYUno4S1l4azl5aDVpMDduYjYzNldLWWZLZ1VIaWJubWIrY2Z6blo4RkhYTEdXS3ZQMlRWb0V2CklxMCtWWHJNZTVSdUJ0MnJ4RTVNaE41dlhScTNOdDhMRkd4U3lJVFFKN292U2hBTFEzTzZQU0UveERkZVRzVisKN1UzRTVzWG80ODlxVy9vUTZmMVQxcWlSc1pPS0hwaHBLbDZYRlFERmhDMXdFd0V4N2ZUeGdOc1hiL3FVRUlyTApTb3pYSEQzTGJma1FkL3VmOERXaVlhd2FWYnNlM3lEQnBIaXpZRWFIYnlYUUM1Z0s5M1ovMkk5T3hHZWpDRFAxCkJBK0U3emxNL3dBQkRucU5EMFRxRHQvK2R3bm5Ya0g4MFV6Rjlhd3RzVE9OTnJlZnhrMEo4Smp2VzBqdHoyTnQKSHVNZy9kVUNnWUVBM0kyUDVUNmNFRFpJMXJ1WUdsN211QWRaQ0NxT2tOdnhrazJQdUNrY1BXbDJZQ29iOVBuegozdElRVHhYMlVRUERzUFBNSVhHdWs1MEovdGpmUnFtb2hxeWFoKzJuazJNTnA5Z3E2Y2J6MERiazFyMnVTc2FtCi8vRkdsZk0ydTJtR2JpMG5vUHA2Smd4NFZoUU94b3VJQkQ1RWhwWjljSWJ1b1F4bWl5eHRVTDBDZ1lFQStIczYKSEhhdXc1dVowdVc4R0Rtb2o4UURMeW9wM3poSlVTZUU3Y3c0YkpUcTlaL2ZPRWpQZ3d3a3cyY1FnMkVqbGpIdQozcTFvNUN3aVNsU0tTb001ZEpKQW42ZCtmZGZrN29NZFdjNXdnOS9wdjQ3QnYrTDVNWk1wMmdvUlQwY1p4TStqCmFZRWI1K2xYeGJLZFUyamlOZ0lzZ1BKbkZNd21pVG44NDgwVC9iTUNnWUVBa0RHaE5WQzB1Y2l6NEdndmJuWkQKUTJmU1pvdGtRQUw4TWhteGI4YTQ1dEd2aWZtZDQ1RVRSc2R4MERMY29tVGlxU3NMZDRZYWkvbXMwa2c1MmJvTQpLMWhuZzV6MTVWOXFTeVVDRVd0NGRkV2QwV09ic3RtanowdVFTWE1FZ296Z1RlSUp1YTVvODcxTlk0R2prMTBnCkpSNE1zUzFzZjRoSU5WU2xLakoybWNVQ2dZRUF3Ym1aSWMzcURUbElJV1BaVk8zSEhHY09zSHZuNzA5NzRkaTAKeTQwM3hIZ0tBM3drVlVaMitzM0I3OUp2em00eWg0dmdseDJOdEs4d0FOR09pKzlwSVJoUlorZjNOM2ZWMVpyRgpqRm5sNFByMnk5RXAvMGVmVHVaVWI5ai9pOVo4SWJSY3pBbkx6dkJlN1JTSGtoc29ta0R4bjRyZGtScGxSUUcvCngzOEJBZjhDZ1lCS240VStIcjBpR1B3VEhKaVZRQWVac2p5T2JEQ0ZNVzNuZ3lBNE1SRVVoMUNzYk50Zyt3ejEKN0hDOVpxeGc1OFVPV2dxeG5RcHFUVjJ4aWdZdmM3d3hGNWpmRTNHOGE2YSthN1NRU095YXF6eEpFT2s0a2RkdQpMa3doaTNPeEhLTWY4ZnRGRW1WbEwvaXB5T0p5ZnJEc3RKQzl1QkNvREh0TjV0ZU9JNGowdGc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+---
+'''
+
 
 ---
 
