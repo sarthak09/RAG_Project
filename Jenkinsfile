@@ -3,7 +3,7 @@ pipeline {
     environment {
         DOCKER_HUB_REPO = "sarthakrawat/rag_project2"
         DOCKER_HUB_CREDENTIALS_ID = "dockerhub_access"
-        IMAGE_TAG = "v${BUILD_NUMBER}"
+        IMAGE_TAG = "v1"
     }
     stages {
         stage('Checkout Github') {
