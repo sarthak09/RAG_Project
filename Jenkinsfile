@@ -30,31 +30,31 @@ pipeline {
                 }
             }
         }
-        // stage('Update Deployment YAML with New Tag') {
-        //     steps {
-        //         script {
-        //             sh """
-        //             sed -i 's|image: sarthakrawat/studyai:.*|image: sarthakrawat/studyaiy:${IMAGE_TAG}|' manifest/deployment.yaml
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Update Deployment YAML with New Tag') {
+            steps {
+                script {
+                    sh """
+                    sed -i 's|image: sarthakrawat/rag_project2:.*|image: sarthakrawat/rag_project2:${IMAGE_TAG}|' manifest/deployment.yaml
+                    """
+                }
+            }
+        }
 
-        // stage('Commit Updated YAML') {
-        //     steps {
-        //         script {
-        //             withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-        //                 sh '''
-        //                 git config user.name "Sarthak09"
-        //                 git config user.email "sarthakrawat09@gmail.com"
-        //                 git add manifest/deployment.yaml
-        //                 git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes to commit"
-        //                 git push https://${GIT_USER}:${GIT_PASS}@github.com/sarthak09/Questiongenerator.git HEAD:main
-        //                 '''
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Commit Updated YAML') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh '''
+                        git config user.name "Sarthak09"
+                        git config user.email "sarthakrawat09@gmail.com"
+                        git add manifest/deployment.yaml
+                        git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes to commit"
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/sarthak09/RAG_Project.git HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
         // stage('Install Kubectl & ArgoCD CLI Setup') {
         //     steps {
         //         sh '''
