@@ -945,7 +945,7 @@ sh 'argocd app sync rag'
 kubectl get deploy -n argocd
 ```
 
-* You should see your `mlops-app` deployment.
+* You should see your `rag-app` deployment.
 * Check pods:
 
 ```bash
